@@ -4,6 +4,9 @@ import { Header } from './components/Header';
 import { MessageList } from './components/MessageList';
 import { MessageInput } from './components/MessageInput';
 import { WelcomeState } from './components/WelcomeState';
+import { UserManagement } from './components/UserManagement';
+import { DepartmentManagement } from './components/DepartmentManagement';
+import { DataDashboard } from './components/DataDashboard';
 import { Message, Role, Category } from './types';
 import { getGeminiResponse } from './services/geminiService';
 
@@ -14,6 +17,9 @@ const App: React.FC = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const isNewChat = messages.length === 0;
+  const isManagementView = currentCategory === Category.USER_MANAGEMENT || 
+                          currentCategory === Category.DEPT_MANAGEMENT || 
+                          currentCategory === Category.DATA_DASHBOARD;
 
   const scrollToBottom = useCallback(() => {
     if (scrollRef.current) {
@@ -82,9 +88,15 @@ const App: React.FC = () => {
   };
 
   const handleSelectCategory = (cat: Category) => {
+    const isDataSwitch = (currentCategory === Category.DATA && cat === Category.DATA_DASHBOARD) ||
+                        (currentCategory === Category.DATA_DASHBOARD && cat === Category.DATA);
+    
     setCurrentCategory(cat);
     // When switching major categories, we clear to keep the context pure
-    setMessages([]);
+    // But we don't clear when switching between Data Chat and Data Dashboard
+    if (!isDataSwitch) {
+      setMessages([]);
+    }
   };
 
   return (
@@ -98,14 +110,18 @@ const App: React.FC = () => {
 
       {/* Main Content Area - Right Interaction */}
       <div className="flex flex-col flex-1 relative min-w-0">
-        <Header onNewChat={handleNewChat} currentCategory={currentCategory} />
+        <Header 
+          onNewChat={handleNewChat} 
+          currentCategory={currentCategory} 
+          onSelectCategory={handleSelectCategory}
+        />
         
         {/* Main Workspace */}
         <div className="flex-1 overflow-y-auto" ref={scrollRef}>
-          <div className="max-w-4xl mx-auto px-4 sm:px-8 py-8 flex flex-col min-h-full">
+          <div className={`${isManagementView ? 'max-w-6xl' : 'max-w-4xl'} mx-auto px-4 sm:px-8 py-8 flex flex-col min-h-full`}>
             
             {/* Context Badge (Current Assistant) */}
-            {!isNewChat && (
+            {!isNewChat && !isManagementView && (
               <div className="flex justify-between items-center mb-8 px-2">
                 <div className="px-4 py-1.5 bg-white border morandi-border rounded-full text-[11px] font-bold text-gray-400 uppercase tracking-widest shadow-sm animate-fade-in">
                   正在与 <span className="morandi-orange">{currentCategory}</span> 对话
@@ -113,11 +129,20 @@ const App: React.FC = () => {
               </div>
             )}
 
-            {/* Content: Switch between Welcome and Chat List */}
+            {/* Content: Switch between Welcome, Chat List, or Management Views */}
             <div className="flex-1 relative">
-              {isNewChat ? (
+              {isManagementView ? (
+                currentCategory === Category.USER_MANAGEMENT ? (
+                  <UserManagement />
+                ) : currentCategory === Category.DEPT_MANAGEMENT ? (
+                  <DepartmentManagement />
+                ) : (
+                  <DataDashboard onBack={() => handleSelectCategory(Category.DATA)} />
+                )
+              ) : isNewChat ? (
                 <WelcomeState 
                   onSuggestionClick={handleSendMessage} 
+                  onSelectCategory={handleSelectCategory}
                   currentCategory={currentCategory} 
                 />
               ) : (
@@ -127,12 +152,14 @@ const App: React.FC = () => {
           </div>
         </div>
 
-        {/* Floating Input Area */}
-        <div className="px-4 pb-10 sm:px-8">
-          <div className="max-w-3xl mx-auto">
-            <MessageInput onSend={handleSendMessage} disabled={isLoading} />
+        {/* Floating Input Area - Hidden in Management View */}
+        {!isManagementView && (
+          <div className="px-4 pb-10 sm:px-8">
+            <div className="max-w-3xl mx-auto">
+              <MessageInput onSend={handleSendMessage} disabled={isLoading} />
+            </div>
           </div>
-        </div>
+        )}
       </div>
       <style>{`
         @keyframes fadeIn {

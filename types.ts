@@ -21,5 +21,8 @@ export interface ChatSession {
 export enum Category {
   DATA = '数据咨询助手',
   PROCESS = '制度及流程操作助手',
-  OFFICE = '员工办公助手'
+  OFFICE = '员工办公助手',
+  USER_MANAGEMENT = '用户管理',
+  DEPT_MANAGEMENT = '部门管理',
+  DATA_DASHBOARD = '管理层数据看板'
 }

@@ -3,6 +3,7 @@ import { Category } from '../types';
 
 interface WelcomeStateProps {
   onSuggestionClick: (text: string) => void;
+  onSelectCategory: (cat: Category) => void;
   currentCategory: Category;
 }
 
@@ -45,6 +46,7 @@ const OFFICE_MODULES = [
 const DATA_MODULES = [
   { name: '奖金数据问询', icon: '💰', desc: '核算详情、发放进度' },
   { name: '业绩数据问询', icon: '📈', desc: '指标达成、经营分析' },
+  { name: '管理层数据看板', icon: '📊', desc: '核心指标监控、经营概览', isDashboard: true },
 ];
 
 const PROCESS_MODULES = [
@@ -53,7 +55,7 @@ const PROCESS_MODULES = [
   { name: '招投标咨询助手', icon: '🏗️', desc: '流程规范、资质管理' },
 ];
 
-export const WelcomeState: React.FC<WelcomeStateProps> = ({ onSuggestionClick, currentCategory }) => {
+export const WelcomeState: React.FC<WelcomeStateProps> = ({ onSuggestionClick, onSelectCategory, currentCategory }) => {
   const suggestions = SUGGESTIONS[currentCategory as string] || SUGGESTIONS[Category.DATA];
   const description = DESCRIPTIONS[currentCategory as string] || '已准备好为您提供专业、精准的咨询服务。';
   
@@ -75,16 +77,22 @@ export const WelcomeState: React.FC<WelcomeStateProps> = ({ onSuggestionClick, c
 
       {/* Special Sub-modules for Data Consulting Assistant */}
       {isData && (
-        <div className="grid grid-cols-2 gap-4 w-full mb-16 max-w-lg">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full mb-16 max-w-2xl">
           {DATA_MODULES.map((module) => (
             <button
               key={module.name}
-              onClick={() => onSuggestionClick(`我想进行${module.name}`)}
+              onClick={() => {
+                if (module.isDashboard) {
+                  onSelectCategory(Category.DATA_DASHBOARD);
+                } else {
+                  onSuggestionClick(`我想进行${module.name}`);
+                }
+              }}
               className="bg-white p-6 rounded-[2.5rem] border morandi-border shadow-sm hover:shadow-orange-glow hover:border-orange-200 transition-all group relative overflow-hidden flex flex-col items-center"
             >
               <div className="absolute top-0 right-0 w-16 h-16 bg-orange-50/30 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-150"></div>
               <div className="text-3xl mb-4 group-hover:scale-110 transition-transform">{module.icon}</div>
-              <h3 className="font-bold text-gray-700 mb-2 text-base">{module.name}</h3>
+              <h3 className="font-bold text-gray-700 mb-2 text-sm">{module.name}</h3>
               <p className="text-[10px] text-gray-400 leading-tight">{module.desc}</p>
             </button>
           ))}
